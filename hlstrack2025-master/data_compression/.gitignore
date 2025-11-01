@@ -6,7 +6,6 @@
 jks.*
 *.prj
 TestResults
-*.log
 *.protoinst
 build_dir.*
 _x_temp.*
@@ -16,7 +15,6 @@ emconfig.json
 profile*.csv
 timeline*.csv
 *xclbin.run_summary
-reports
 build
 obj_*
 _x_temp.*
