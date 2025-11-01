@@ -1,0 +1,62 @@
+vitis-run.bat --mode hls --csim --config D:\FPGA\lz4_compress_hls\hls_config.cfg --work_dir lz4CompressEngineRun
+ ****** vitis-run v2024.2 (64-bit)
+   **** Start of session at: Sun Nov  2 00:51:43 2025
+     ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+     ** Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+   **** HLS Build v2024.2 5238294
+ INFO: [HLS 200-2005] Using work_dir D:/FPGA/lz4_compress_hls/lz4CompressEngineRun 
+ INFO: [HLS 200-1505] Using default flow_target 'vivado'
+ Resolution: For help on HLS 200-1505 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1505.html
+ INFO: [HLS 200-1465] Applying ini 'syn.file=C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/lz4_compress_test.cpp' from D:/FPGA/lz4_compress_hls/hls_config.cfg(6)
+ INFO: [HLS 200-10] Adding design file 'C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/lz4_compress_test.cpp' to the project
+ INFO: [HLS 200-1465] Applying ini 'syn.file_cflags=C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/lz4_compress_test.cpp,-IC:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/include/hw' from D:/FPGA/lz4_compress_hls/hls_config.cfg(7)
+ INFO: [HLS 200-1465] Applying ini 'tb.file=C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/lz4_compress_test.cpp' from D:/FPGA/lz4_compress_hls/hls_config.cfg(9)
+ INFO: [HLS 200-10] Adding test bench file 'C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/lz4_compress_test.cpp' to the project
+ INFO: [HLS 200-1465] Applying ini 'tb.file_cflags=C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/lz4_compress_test.cpp,-IC:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/include/hw' from D:/FPGA/lz4_compress_hls/hls_config.cfg(10)
+ INFO: [HLS 200-1465] Applying ini 'syn.top=lz4CompressEngineRun' from D:/FPGA/lz4_compress_hls/hls_config.cfg(8)
+ INFO: [HLS 200-1465] Applying ini 'flow_target=vivado' from D:/FPGA/lz4_compress_hls/hls_config.cfg(5)
+ INFO: [HLS 200-1505] Using flow_target 'vivado'
+ Resolution: For help on HLS 200-1505 see docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=200-1505.html
+ INFO: [HLS 200-1465] Applying ini 'part=xc7z020clg484-1' from D:/FPGA/lz4_compress_hls/hls_config.cfg(1)
+ INFO: [HLS 200-1611] Setting target device to 'xc7z020-clg484-1'
+ INFO: [SYN 201-201] Setting up clock 'default' with a period of 13.6ns.
+ INFO: [HLS 200-1465] Applying ini 'clock_uncertainty=10%' from D:/FPGA/lz4_compress_hls/hls_config.cfg(4)
+ INFO: [SYN 201-201] Setting up clock 'default' with an uncertainty of 1.36ns.
+ INFO: [HLS 200-1465] Applying ini 'cosim.argv=C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/sample.txt C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/sample.txt.encoded' from D:/FPGA/lz4_compress_hls/hls_config.cfg(14)
+ INFO: [HLS 200-1465] Applying ini 'cosim.disable_dependency_check=0' from D:/FPGA/lz4_compress_hls/hls_config.cfg(12)
+ INFO: [HLS 200-1465] Applying ini 'cosim.setup=0' from D:/FPGA/lz4_compress_hls/hls_config.cfg(17)
+ INFO: [HLS 200-1465] Applying ini 'csim.argv=C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/sample.txt C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/sample.txt.encoded' from D:/FPGA/lz4_compress_hls/hls_config.cfg(13)
+ INFO: [HLS 200-1465] Applying ini 'syn.compile.pragma_strict_mode=1' from D:/FPGA/lz4_compress_hls/hls_config.cfg(11)
+ INFO: [HLS 200-1465] Applying ini 'vivado.rtl=verilog' from D:/FPGA/lz4_compress_hls/hls_config.cfg(15)
+ INFO: [SIM 211-2] *************** CSIM start ***************
+ INFO: [SIM 211-4] CSIM will launch CLANG as the compiler.
+ INFO: [HLS 200-2036] Building debug C Simulation binaries
+    Compiling C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/lz4_compress_test.cpp in debug mode
+ In file included from C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/lz4_compress_test.cpp:18:
+ In file included from D:/AMD/Vitis/2024.2/include/ap_int.h:10:
+ In file included from D:/AMD/Vitis/2024.2/include/etc/ap_common.h:658:
+ In file included from D:/AMD/Vitis/2024.2/include/etc/ap_private.h:68:
+ In file included from D:/AMD/Vitis/2024.2/include/hls_half.h:26:
+ In file included from D:/AMD/Vitis/2024.2/include/etc/hls_half_fpo.h:19:
+ In file included from D:/AMD/Vitis/2024.2/include/hls_fpo.h:140:
+ In file included from D:/AMD/Vitis/2024.2/include/floating_point_v7_1_bitacc_cmodel.h:150:
+ D:/AMD/Vitis/2024.2/include/gmp.h:58:9: warning: '__GMP_LIBGMP_DLL' macro redefined [-Wmacro-redefined]
+ #define __GMP_LIBGMP_DLL  0
+         ^
+ D:/AMD/Vitis/2024.2/include/floating_point_v7_1_bitacc_cmodel.h:142:9: note: previous definition is here
+ #define __GMP_LIBGMP_DLL 1
+         ^
+ C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/tests/lz4_compress/lz4_compress_test.cpp:32:9: warning: 'PARALLEL_BLOCK' macro redefined [-Wmacro-redefined]
+ #define PARALLEL_BLOCK 1
+         ^
+ C:/Users/Anohana/Desktop/hlstrack2025-master/data_compression/L1/include/hw/s2mm.hpp:306:9: note: previous definition is here
+ #define PARALLEL_BLOCK 8
+         ^
+ 2 warnings generated.
+ ------- Compression Ratio: 2.09396 -------
+ INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 1248
+ INFO: [SIM 211-1] CSim done with 0 errors.
+ INFO: [SIM 211-3] *************** CSIM finish ***************
+ INFO: [HLS 200-112] Total CPU user time: 3 seconds. Total CPU system time: 3 seconds. Total elapsed time: 14.109 seconds; peak allocated memory: 269.031 MB.
+ INFO: [vitis-run 60-791] Total elapsed time: 0h 0m 19s
+ C-simulation finished successfully
