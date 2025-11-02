@@ -53,7 +53,7 @@ struct choleskyTraits {
         1; // Select implementation: 0=Basic, 1=Lower latency architecture, 2=Further improved latency architecture
     static const int INNER_II = 1; // Specify the pipelining target for the inner loop
     static const int UNROLL_FACTOR =
-        1; // Specify the inner loop unrolling factor for the choleskyAlt2 architecture(2) to increase throughput
+        2; // Specify the inner loop unrolling factor for the choleskyAlt2 architecture(2) to increase throughput
     static const int UNROLL_DIM = (LowerTriangularL == true ? 1 : 2); // Dimension to unroll matrix
     static const int ARCH2_ZERO_LOOP =
         true; // Additional implementation "switch" for the choleskyAlt2 architecture (2).
@@ -71,7 +71,7 @@ struct choleskyTraits<LowerTriangularL, RowsColsA, hls::x_complex<InputBaseType>
     typedef hls::x_complex<OutputBaseType> L_OUTPUT_T;
     static const int ARCH = 1;
     static const int INNER_II = 1;
-    static const int UNROLL_FACTOR = 1;
+    static const int UNROLL_FACTOR = 2;
     static const int UNROLL_DIM = (LowerTriangularL == true ? 1 : 2);
     static const int ARCH2_ZERO_LOOP = true;
 };
@@ -88,7 +88,7 @@ struct choleskyTraits<LowerTriangularL, RowsColsA, std::complex<InputBaseType>, 
     typedef std::complex<OutputBaseType> L_OUTPUT_T;
     static const int ARCH = 1;
     static const int INNER_II = 1;
-    static const int UNROLL_FACTOR = 1;
+    static const int UNROLL_FACTOR = 2;
     static const int UNROLL_DIM = (LowerTriangularL == true ? 1 : 2);
     static const int ARCH2_ZERO_LOOP = true;
 };
@@ -122,7 +122,7 @@ struct choleskyTraits<LowerTriangularL, RowsColsA, ap_fixed<W1, I1, Q1, O1, N1>,
         L_OUTPUT_T; // Takes new L value.  Same as L output but saturation set
     static const int ARCH = 1;
     static const int INNER_II = 1;
-    static const int UNROLL_FACTOR = 1;
+    static const int UNROLL_FACTOR = 2;
     static const int UNROLL_DIM = (LowerTriangularL == true ? 1 : 2);
     static const int ARCH2_ZERO_LOOP = true;
 };
@@ -159,7 +159,7 @@ struct choleskyTraits<LowerTriangularL,
         L_OUTPUT_T; // Takes new L value.  Same as L output but saturation set
     static const int ARCH = 1;
     static const int INNER_II = 1;
-    static const int UNROLL_FACTOR = 1;
+    static const int UNROLL_FACTOR = 2;
     static const int UNROLL_DIM = (LowerTriangularL == true ? 1 : 2);
     static const int ARCH2_ZERO_LOOP = true;
 };
@@ -196,7 +196,7 @@ struct choleskyTraits<LowerTriangularL,
         L_OUTPUT_T; // Takes new L value.  Same as L output but saturation set
     static const int ARCH = 1;
     static const int INNER_II = 1;
-    static const int UNROLL_FACTOR = 1;
+    static const int UNROLL_FACTOR = 2;
     static const int UNROLL_DIM = (LowerTriangularL == true ? 1 : 2);
     static const int ARCH2_ZERO_LOOP = true;
 };
@@ -257,6 +257,7 @@ void cholesky_rsqrt(InputType x, OutputType& res) {
 Function_cholesky_rsqrt_default:;
     res = x_rsqrt(x);
 }
+
 template <int W1, int I1, ap_q_mode Q1, ap_o_mode O1, int N1, int W2, int I2, ap_q_mode Q2, ap_o_mode O2, int N2>
 void cholesky_rsqrt(ap_fixed<W1, I1, Q1, O1, N1> x, ap_fixed<W2, I2, Q2, O2, N2>& res) {
 Function_cholesky_rsqrt_fixed:;
@@ -288,6 +289,15 @@ Function_cholesky_prod_sum_mult_complex:;
     C.real(A.real() * B);
     C.imag(A.imag() * B);
 }
+template <typename T, int RowsColsA>
+T cholesky_symmetric_access(const T matrix[RowsColsA][RowsColsA], int i, int j, bool lower_triangular) {
+#pragma HLS INLINE
+    if (lower_triangular) {
+        return (i >= j) ? matrix[i][j] : hls::x_conj(matrix[j][i]);
+    } else {
+        return (i <= j) ? matrix[i][j] : hls::x_conj(matrix[j][i]);
+    }
+}
 
 // ===================================================================================================================
 // choleskyBasic
@@ -309,10 +319,8 @@ int choleskyBasic(const InputType A[RowsColsA][RowsColsA], OutputType L[RowsCols
 
     typename CholeskyTraits::L_OUTPUT_T new_L;
     OutputType retrieved_L;
-    // Internal memory used to aviod read access from function output argument L.
-    // NOTE: The internal matrix only needs to be triangular but optimization using a 1-D array it will require addition
-    // logic to generate the indexes. Refer to the choleskyAlt function.
     OutputType L_internal[RowsColsA][RowsColsA];
+#pragma HLS ARRAY_PARTITION variable = L_internal cyclic dim = 1 factor = 2
 
 col_loop:
     for (int j = 0; j < RowsColsA; j++) {
@@ -404,21 +412,13 @@ col_loop:
         }
     }
     return (return_code);
-}
-
-// ===================================================================================================================
-// choleskyAlt: Alternative architecture with improved latency at the expense of higher resource
 template <bool LowerTriangularL, int RowsColsA, typename CholeskyTraits, class InputType, class OutputType>
 int choleskyAlt(const InputType A[RowsColsA][RowsColsA], OutputType L[RowsColsA][RowsColsA]) {
     int return_code = 0;
-
-    // Optimize internal memories
-    // - For complex data types the diagonal will be real only, plus for fixed point it must be stored to a
-    //   higher precision.
-    // - Requires additional logic to generate the memory indexes
-    // - For smaller matrix sizes there maybe be an increase in memory usage
     OutputType L_internal[(RowsColsA * RowsColsA - RowsColsA) / 2];
+#pragma HLS ARRAY_PARTITION variable = L_internal cyclic dim = 1 factor = 2
     typename CholeskyTraits::RECIP_DIAG_T diag_internal[RowsColsA];
+#pragma HLS ARRAY_PARTITION variable = diag_internal cyclic dim = 1 factor = 2
 
     typename CholeskyTraits::ACCUM_T square_sum;
     typename CholeskyTraits::ACCUM_T A_cast_to_sum;
@@ -437,19 +437,17 @@ int choleskyAlt(const InputType A[RowsColsA][RowsColsA], OutputType L[RowsColsA]
 
 row_loop:
     for (int i = 0; i < RowsColsA; i++) {
-        // Index generation for optimized/packed L_internal memory
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = RowsColsA
         int i_sub1 = i - 1;
         int i_off = ((i_sub1 * i_sub1 - i_sub1) / 2) + i_sub1;
-
-        // Off diagonal calculation
         square_sum = 0;
     col_loop:
         for (int j = 0; j < i; j++) {
-#pragma HLS loop_tripcount max = 1 + RowsColsA / 2
-            // Index generation
+#pragma HLS PIPELINE II = 1
+#pragma HLS LOOP_TRIPCOUNT min = 0 max = RowsColsA / 2
+#pragma HLS DEPENDENCE variable = L_internal inter false
             int j_sub1 = j - 1;
             int j_off = ((j_sub1 * j_sub1 - j_sub1) / 2) + j_sub1;
-            // Prime the off-diagonal sum with target elements A value.
             if (LowerTriangularL == true) {
                 product_sum = A[i][j];
             } else {
@@ -457,33 +455,27 @@ row_loop:
             }
         sum_loop:
             for (int k = 0; k < j; k++) {
-#pragma HLS loop_tripcount max = 1 + RowsColsA / 2
-#pragma HLS PIPELINE II = CholeskyTraits::INNER_II
+#pragma HLS PIPELINE II = 1
+#pragma HLS LOOP_TRIPCOUNT min = 0 max = RowsColsA / 2
+#pragma HLS UNROLL factor = 2
                 prod = -L_internal[i_off + k] * hls::x_conj(L_internal[j_off + k]);
                 prod_cast_to_sum = prod;
                 product_sum += prod_cast_to_sum;
             }
             prod_cast_to_off_diag = product_sum;
-            // Fetch diagonal value
             L_diag_recip = diag_internal[j];
-            // Diagonal is stored in its reciprocal form so only need to multiply the product sum
             cholesky_prod_sum_mult(prod_cast_to_off_diag, L_diag_recip, new_L_off_diag);
-            // Round to target format using method specifed by traits defined types.
             new_L = new_L_off_diag;
-            // Build sum for use in diagonal calculation for this row.
             square_sum += hls::x_conj(new_L) * new_L;
-            // Store result
             L_internal[i_off + j] = new_L;
             if (LowerTriangularL == true) {
-                L[i][j] = new_L; // store in lower triangle
-                L[j][i] = 0;     // Zero upper
+                L[i][j] = new_L;
+                L[j][i] = 0;
             } else {
-                L[j][i] = hls::x_conj(new_L); // store in upper triangle
-                L[i][j] = 0;                  // Zero lower
+                L[j][i] = hls::x_conj(new_L);
+                L[i][j] = 0;
             }
         }
-
-        // Diagonal calculation
         A_cast_to_sum = A[i][i];
         A_minus_sum = A_cast_to_sum - square_sum;
         if (cholesky_sqrt_op(A_minus_sum, new_L_diag)) {
@@ -492,13 +484,9 @@ row_loop:
 #endif
             return_code = 1;
         }
-        // Round to target format using method specifed by traits defined types.
         new_L = new_L_diag;
-        // Generate the reciprocal of the diagonal for internal use to aviod the latency of a divide in every
-        // off-diagonal calculation
         A_minus_sum_cast_diag = A_minus_sum;
         cholesky_rsqrt(hls::x_real(A_minus_sum_cast_diag), new_L_diag_recip);
-        // Store diagonal value
         diag_internal[i] = new_L_diag_recip;
         if (LowerTriangularL == true) {
             L[i][i] = new_L;
@@ -533,12 +521,11 @@ int choleskyAlt2(const InputType A[RowsColsA][RowsColsA], OutputType L[RowsColsA
     typename CholeskyTraits::OFF_DIAG_T new_L_off_diag;
     typename CholeskyTraits::L_OUTPUT_T new_L;
 
-#pragma HLS ARRAY_PARTITION variable = A cyclic dim = CholeskyTraits::UNROLL_DIM factor = CholeskyTraits::UNROLL_FACTOR
-#pragma HLS ARRAY_PARTITION variable = L cyclic dim = CholeskyTraits::UNROLL_DIM factor = CholeskyTraits::UNROLL_FACTOR
-#pragma HLS ARRAY_PARTITION variable = L_internal cyclic dim = CholeskyTraits::UNROLL_DIM factor = \
-    CholeskyTraits::UNROLL_FACTOR
-#pragma HLS ARRAY_PARTITION variable = square_sum_array cyclic dim = 1 factor = CholeskyTraits::UNROLL_FACTOR
-#pragma HLS ARRAY_PARTITION variable = product_sum_array cyclic dim = 1 factor = CholeskyTraits::UNROLL_FACTOR
+#pragma HLS ARRAY_PARTITION variable = A cyclic dim = 1 factor = 2
+#pragma HLS ARRAY_PARTITION variable = L cyclic dim = 1 factor = 2
+#pragma HLS ARRAY_PARTITION variable = L_internal cyclic dim = 1 factor = 2
+#pragma HLS ARRAY_PARTITION variable = square_sum_array cyclic dim = 1 factor = 2
+#pragma HLS ARRAY_PARTITION variable = product_sum_array cyclic dim = 1 factor = 2
 
 col_loop:
     for (int j = 0; j < RowsColsA; j++) {
@@ -653,7 +640,7 @@ col_loop:
             for (int j = i + 1; j < RowsColsA; j++) {
 // Define average trip count for reporting, loop reduces in length for every iteration of zero_rows_loop
 #pragma HLS loop_tripcount max = 1 + RowsColsA / 2
-#pragma HLS PIPELINE
+#pragma HLS PIPELINE II = 1
                 if (LowerTriangularL == true) {
                     L[i][j] = 0; // Zero upper
                 } else {
@@ -706,9 +693,10 @@ template <bool LowerTriangularL,
 int cholesky(hls::stream<InputType>& matrixAStrm, hls::stream<OutputType>& matrixLStrm) {
     InputType A[RowsColsA][RowsColsA];
     OutputType L[RowsColsA][RowsColsA];
-
+#pragma HLS ARRAY_PARTITION variable = A cyclic dim = 1 factor = 2
+#pragma HLS ARRAY_PARTITION variable = L cyclic dim = 1 factor = 2
     for (int r = 0; r < RowsColsA; r++) {
-#pragma HLS PIPELINE
+#pragma HLS PIPELINE II = 1
         for (int c = 0; c < RowsColsA; c++) {
             matrixAStrm.read(A[r][c]);
         }
@@ -716,9 +704,8 @@ int cholesky(hls::stream<InputType>& matrixAStrm, hls::stream<OutputType>& matri
 
     int ret = 0;
     ret = choleskyTop<LowerTriangularL, RowsColsA, TRAITS, InputType, OutputType>(A, L);
-
     for (int r = 0; r < RowsColsA; r++) {
-#pragma HLS PIPELINE
+#pragma HLS PIPELINE II = 1
         for (int c = 0; c < RowsColsA; c++) {
             matrixLStrm.write(L[r][c]);
         }
