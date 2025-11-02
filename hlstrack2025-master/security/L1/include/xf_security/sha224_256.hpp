@@ -107,7 +107,7 @@ LOOP_SHA256_GENENERATE_MAIN:
         // this block will hold 64 byte of message.
         LOOP_SHA256_GEN_ONE_FULL_BLK:
             for (int i = 0; i < 16; ++i) {
-#pragma HLS unroll
+#pragma HLS pipeline II=1
                 uint32_t l = msg_strm.read();
                 // XXX algorithm assumes big-endian.
                 l = ((0x000000ffUL & l) << 24) | ((0x0000ff00UL & l) << 8) | ((0x00ff0000UL & l) >> 8) |
@@ -138,7 +138,7 @@ LOOP_SHA256_GENENERATE_MAIN:
         // zero
         LOOP_SHA256_GEN_PAD_13_ZEROS:
             for (int i = 1; i < 14; ++i) {
-#pragma HLS unroll
+#pragma HLS pipeline II=1
                 b.M[i] = 0;
                 _XF_SECURITY_PRINT("DEBUG: M[%d] =\t%08x (zero)\n", i, b.M[i]);
             }
@@ -255,7 +255,7 @@ LOOP_SHA256_GENENERATE_MAIN:
 #pragma HLS array_partition variable = b1.M complete
         LOOP_SHA256_GEN_L_ONLY_BLK:
             for (int i = 0; i < 14; ++i) {
-#pragma HLS unroll
+#pragma HLS pipeline II=1
                 b1.M[i] = 0;
                 _XF_SECURITY_PRINT("DEBUG: M[%d] =\t%08x (zero)\n", i, b1.M[i]);
             }
@@ -312,7 +312,7 @@ LOOP_SHA256_GENENERATE_MAIN:
         // this block will hold 64 byte of message.
         LOOP_SHA256_GEN_ONE_FULL_BLK:
             for (int i = 0; i < 16; i += 2) {
-#pragma HLS unroll
+#pragma HLS pipeline II=1
                 uint64_t ll = msg_strm.read().to_uint64();
                 // low
                 uint32_t l = ll & 0xffffffffUL;
@@ -577,6 +577,7 @@ inline void sha256_iter(uint32_t& a,
     uint32_t Wt = w_strm.read();
     /// temporal variables
     uint32_t T1, T2;
+#pragma HLS BIND_OP variable=T1 op=add impl=dsp
     T1 = h + BSIG1(e) + CH(e, f, g) + Kt + Wt;
     T2 = BSIG0(a) + MAJ(a, b, c);
 
